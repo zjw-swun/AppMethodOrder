@@ -1,0 +1,130 @@
+import java.util.regex.Matcher
+import java.util.regex.Pattern
+
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
+    defaultConfig {
+        applicationId "com.zjw.appmethodorder"
+        minSdkVersion 14
+        targetSdkVersion 25
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    compile 'com.android.support:appcompat-v7:25.3.0'
+    compile 'com.android.support.constraint:constraint-layout:1.0.1'
+    testCompile 'junit:junit:4.12'
+}
+
+//核心任务：在captures文件目录下输出 基于最新.trace文件的函数调用信息的txt版本
+//说明：dmtracedump 为 android sdk自带工具，要执行dmtracedump命令则需要先添加环境变量
+task AppOutPutMethodOrder() {
+    doLast {
+        def capturesDirPath = project.getProjectDir().getParentFile().path + File.separator + "captures";
+        def capturesDir = file(capturesDirPath);
+        def traceType = "trace"
+        if (!capturesDir.exists() || !capturesDir.canRead()) {
+            return
+        }
+        def map = new TreeMap<Long, String>(
+                new Comparator<Long>() {
+                    public int compare(Long obj1, Long obj2) {
+                        return obj2.compareTo(obj1);
+                    }
+
+                });
+        //遍历拿到trace 文件名 然后排序 找到最大时间数的trace就是最新的文件，拿到字符串
+        capturesDir.list(new FilenameFilter() {
+            @Override
+            boolean accept(File dir, String name) {
+                if (name.contains(traceType)) {
+                    def substring = name.substring(name.length() - 22, name.length() - 6).trim()
+                    String regEx = "[^0-9]"
+                    Pattern p = Pattern.compile(regEx)
+                    Matcher m = p.matcher(substring)
+                    def time = m.replaceAll("").trim()
+                    map.put(Long.parseLong(time), name)
+                }
+                return false
+            }
+        })
+        def lastTraceName = "";
+        Set<Long> keySet = map.keySet();
+        Iterator<Long> iter = keySet.iterator();
+        while (iter.hasNext()) {
+            Long key = iter.next();
+            lastTraceName = map.get(key);
+            break;
+        }
+
+        def tracePath = capturesDirPath + File.separator + lastTraceName
+        println "===== tracePath is  ${tracePath} =========="
+        def orderPath = capturesDirPath + File.separator + "base_order.txt"
+        def orderFile = file(orderPath)
+        if(orderFile.exists()){
+            orderFile.write("")
+        }
+        Runtime runtime = Runtime.getRuntime();
+        //说明：dmtracedump 为 android sdk自带工具，要执行dmtracedump命令则需要先添加环境变量
+        def basecomand = "dmtracedump  -ho " + tracePath + " >> " + orderPath
+        def command = "cmd /c start  /b "+basecomand
+        println "=====command is ${command} =========="
+        try {
+            runtime.exec(command);
+        } catch (Exception e) {
+            println "=====Exception: ${e.getCause()}  =========="
+        }
+    }
+}
+
+
+
+//这里AppFilterMethodOrder 任务其实也不需要 执行找到 \captures 目录找到 base_order.txt
+//用Notepad++ 使用正则 先过滤 带 xit 的行 （我们只关注ent 行就行，ent代表进入执行函数　xit代表退出函数）再过滤掉你不关心的包名
+// Notepad++ 中过滤将会使用到的命令行如下
+//^.*xit.*$ //去除掉 含有 xit 字符串的行  然后替换为空
+// ^((?!XXX).)*$  //去除不包含XXX的行  然后替换为空
+//^\s+   //合并空行  然后替换为空
+task AppFilterMethodOrder(){
+    doLast{
+        def capturesDirPath = project.getProjectDir().getParentFile().path + File.separator + "captures";
+        def orderPath = capturesDirPath + File.separator + "base_order.txt"
+        if(!file(orderPath).exists()){
+            return
+        }
+        BufferedReader inputStream = new BufferedReader(new FileReader(orderPath));
+        def filterOrderPath = new File(capturesDirPath + File.separator + "order.txt")
+        if (!filterOrderPath.exists()){
+            filterOrderPath.createNewFile();
+        }else {
+            filterOrderPath.write("")
+        }
+        String content ;
+        while ((content = inputStream.readLine()) != null) {
+            if(content.contains(" ent ")
+                    //com.zjw.appmethodorder 这里可以修改成你想要留下的包名对应的函数调用信息
+                    && content.contains("com.zjw.appmethodorder")
+            ){
+                filterOrderPath .append(content+"\n")
+            }
+        }
+    }
+}
+
+
