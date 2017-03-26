@@ -1,10 +1,11 @@
-
-# 一个能让你了解所有函数调用顺序的Android库
-
 > 背景：当项目代码量很大的时候，或者你作为一名新人要快速掌握代码的时候，给函数打上log，来了解代码执行逻辑，这种方式会显然成本太大，要改动项目编译运行，NO！太耗时；或者你想debug的方式来给你想关注的几个函数，来了解代码执行逻辑，NO！因为你肯定会漏掉函数；也许你可以固执的给你写的项目打满log说这样也行，但是你要知道你方法所调用的jdk的函数或者第三方aar或者jar再或者android sdk中的函数调用顺序你怎么办，还能打log吗？显然不行吧，来~这个项目给让可以让你以包名为过滤点过滤你想要知道所有函数调用顺序。
 
 提醒：本文以及相关库是本人原创，转载请标注原文链接。
 
+项目地址：[https://github.com/zjw-swun/AppMethodOrder](https://github.com/zjw-swun/AppMethodOrder) 欢迎star
+
+特别鸣谢 xingstarx 同学 ，提供兼容mac和linux的``task AppFilterMethodOrder``代码<br>
+他的github地址:[https://github.com/xingstarx/](https://github.com/xingstarx/)
 # 1. 效果奉上
 
 ![3.gif](http://upload-images.jianshu.io/upload_images/1857887-eb619b1815d64ba3.gif?imageMogr2/auto-orient/strip)
@@ -149,7 +150,6 @@ task AppOutPutMethodOrder() {
                     public int compare(Long obj1, Long obj2) {
                         return obj2.compareTo(obj1);
                     }
-
                 });
         //遍历拿到trace 文件名 然后排序 找到最大时间数的trace就是最新的文件，拿到字符串
         capturesDir.list(new FilenameFilter() {
@@ -168,9 +168,9 @@ task AppOutPutMethodOrder() {
         })
         def lastTraceName = "";
         Set<Long> keySet = map.keySet();
-        Iterator<Long> iter = keySet.iterator();
-        while (iter.hasNext()) {
-            Long key = iter.next();
+        Iterator<Long> iterator = keySet.iterator();
+        while (iterator.hasNext()) {
+            Long key = iterator.next();
             lastTraceName = map.get(key);
             break;
         }
@@ -184,11 +184,22 @@ task AppOutPutMethodOrder() {
         }
         Runtime runtime = Runtime.getRuntime();
         //说明：dmtracedump 为 android sdk自带工具，要执行dmtracedump命令则需要先添加环境变量
-        def basecomand = "dmtracedump  -ho " + tracePath + " >> " + orderPath
-        def command = "cmd /c start  /b "+basecomand
-        println "=====command is ${command} =========="
+        def baseComand = "dmtracedump  -ho " + tracePath + " >> " + orderPath
+        def command = ""
+        String[] cmdArray = null;
+        String osName = System.getProperty("os.name");
+        String osNameMatch = osName.toLowerCase();
+        if(osNameMatch.contains("windows")) {
+            command = "cmd /c start  /b "+baseComand;
+        }else {
+            cmdArray = ["bash", "-c", baseComand];
+        }
         try {
-            runtime.exec(command);
+            if (cmdArray != null) {
+                runtime.exec(cmdArray);
+            } else {
+                runtime.exec(command);
+            }
         } catch (Exception e) {
             println "=====Exception: ${e.getCause()}  =========="
         }
