@@ -4,7 +4,7 @@
 
 项目地址：[https://github.com/zjw-swun/AppMethodOrder](https://github.com/zjw-swun/AppMethodOrder) 欢迎star
 
-特别鸣谢 xingstarx 同学 ，提供兼容mac和linux的``task AppFilterMethodOrder``代码<br>
+特别鸣谢 xingstarx 同学 ，提供兼容mac和linux的``task AppOutPutMethodOrder``代码<br>
 他的github地址:[https://github.com/xingstarx/](https://github.com/xingstarx/)
 # 1. 效果奉上
 
