@@ -1,6 +1,3 @@
-import java.util.regex.Matcher
-import java.util.regex.Pattern
-
 apply plugin: 'com.android.application'
 
 android {
@@ -36,73 +33,25 @@ dependencies {
 task AppOutPutMethodOrder() {
     doLast {
         def capturesDirPath = project.getProjectDir().getParentFile().path + File.separator + "captures";
-        def capturesDir = file(capturesDirPath);
-        def traceType = "trace"
-        if (!capturesDir.exists() || !capturesDir.canRead()) {
-            return
-        }
-        def map = new TreeMap<Long, String>(
-                new Comparator<Long>() {
-                    public int compare(Long obj1, Long obj2) {
-                        return obj2.compareTo(obj1);
-                    }
-                });
-        //遍历拿到trace 文件名 然后排序 找到最大时间数的trace就是最新的文件，拿到字符串
-        capturesDir.list(new FilenameFilter() {
-            @Override
-            boolean accept(File dir, String name) {
-                if (name.contains(traceType)) {
-                    def substring = name.substring(name.length() - 22, name.length() - 6).trim()
-                    String regEx = "[^0-9]"
-                    Pattern p = Pattern.compile(regEx)
-                    Matcher m = p.matcher(substring)
-                    def time = m.replaceAll("").trim()
-                    map.put(Long.parseLong(time), name)
-                }
-                return false
-            }
-        })
-        def lastTraceName = "";
-        Set<Long> keySet = map.keySet();
-        Iterator<Long> iterator = keySet.iterator();
-        while (iterator.hasNext()) {
-            Long key = iterator.next();
-            lastTraceName = map.get(key);
-            break;
-        }
+        def capturesDir = new File(capturesDirPath);
+        capturesDir.traverse {
+            if (it.isFile() && it.name.endsWith(".trace")) {
+                def orderName = it.name.replace("trace", "txt")
+                def orderFile = new File(capturesDirPath, orderName)
 
-        def tracePath = capturesDirPath + File.separator + lastTraceName
-        println "===== tracePath is  ${tracePath} =========="
-        def orderPath = capturesDirPath + File.separator + "base_order.txt"
-        def orderFile = file(orderPath)
-        if(orderFile.exists()){
-            orderFile.write("")
-        }
-        Runtime runtime = Runtime.getRuntime();
-        //说明：dmtracedump 为 android sdk自带工具，要执行dmtracedump命令则需要先添加环境变量
-        def baseComand = "dmtracedump  -ho " + tracePath + " >> " + orderPath
-        def command = ""
-        String[] cmdArray = null;
-        String osName = System.getProperty("os.name");
-        String osNameMatch = osName.toLowerCase();
-        if(osNameMatch.contains("windows")) {
-            command = "cmd /c start  /b "+baseComand;
-        }else {
-            cmdArray = ["bash", "-c", baseComand];
-        }
-        try {
-            if (cmdArray != null) {
-                runtime.exec(cmdArray);
-            } else {
-                runtime.exec(command);
+                //说明：dmtracedump 为 android sdk自带工具，要执行dmtracedump命令则需要先添加环境变量
+                def baseComand = "dmtracedump  -ho " + it.absolutePath + " >> " + orderFile.absolutePath
+                println baseComand
+                String osNameMatch = System.getProperty("os.name").toLowerCase();
+                if (osNameMatch.contains("windows")) {
+                    ("cmd /c start  /b " + baseComand).execute()
+                } else {
+                    ["bash", "-c", baseComand].execute()
+                }
             }
-        } catch (Exception e) {
-            println "=====Exception: ${e.getCause()}  =========="
         }
     }
 }
-
-
 
 //这里AppFilterMethodOrder 任务其实也不需要 执行找到 \captures 目录找到 base_order.txt
 //用Notepad++ 使用正则 先过滤 带 xit 的行 （我们只关注ent 行就行，ent代表进入执行函数　xit代表退出函数）再过滤掉你不关心的包名
@@ -115,35 +64,33 @@ task AppFilterMethodOrder() {
     doLast {
         //TODO 替换为你想要过滤的包名
         def filterPackageName = "com.zjw.appmethodorder"
-
-
+        //处理包名
+        def filterSignature = filterPackageName.replaceAll("[.]", "/")
 
         def capturesDirPath = project.getProjectDir().getParentFile().path + File.separator + "captures";
-        def orderPath = capturesDirPath + File.separator + "base_order.txt"
-        if (!file(orderPath).exists()) {
-            return
-        }
-        //处理包名
-        def filterSignature = filterPackageName.replaceAll("[.]","/")
-        print filterSignature
-        BufferedReader inputStream = new BufferedReader(new FileReader(orderPath));
-        def filterOrderPath = new File(capturesDirPath + File.separator + "order.txt")
-        if (!filterOrderPath.exists()) {
-            filterOrderPath.createNewFile();
-        } else {
-            filterOrderPath.write("")
-        }
-        String content;
-        while ((content = inputStream.readLine()) != null) {
+        def capturesDir = new File(capturesDirPath);
 
-            if (content.contains(" ent ")
-                    //兼容不同版本traceview 有的是方法包名有的是方法签名
-                    && (content.contains(filterPackageName)
-                    || content.contains(filterSignature))
-            ) {
-                filterOrderPath.append(content + "\n")
+        capturesDir.traverse {
+            if (it.isFile() && it.name.endsWith(".txt") && !it.name.contains("--filter")) {
+                def orderName = it.name.replace(".txt", "--filter.txt")
+                def orderFile = new File(capturesDirPath, orderName)
+
+                it.eachLine { line ->
+
+                    if (line.contains(" ent ")
+                        //兼容不同版本traceview 有的是方法包名有的是方法签名
+                    && (line.contains(filterPackageName)
+                    || line.contains(filterSignature))
+                    ) {
+                        println line
+                        orderFile.append(line + "\n")
+                    }
+
+                }
             }
         }
+
+
     }
 }
 
