@@ -4,8 +4,18 @@
 
 项目地址：[https://github.com/zjw-swun/AppMethodOrder](https://github.com/zjw-swun/AppMethodOrder) 欢迎star
 
-特别鸣谢 xingstarx 同学 ，提供兼容mac和linux的``task AppOutPutMethodOrder``代码<br>
-他的github地址:[https://github.com/xingstarx/](https://github.com/xingstarx/)
+作者列表（排名按代码贡献时间顺序）：二精-霁雪清虹，xingstarx，wing，pighead4u <br>
+
+特别鸣谢 ：
+[xingstarx]() 同学 ，提供兼容mac和linux的``task AppOutPutMethodOrder``代码<br>
+他的github地址:[https://github.com/xingstarx/](https://github.com/xingstarx/) 
+<br>
+大精-[wing]() 同学，提供兼容不同版本traceview的``task AppFilterMethodOrder``代码<br>
+他的github地址：[https://github.com/githubwing](https://github.com/githubwing)<br>
+[pighead4u]()同学，提供的``task AppOutPutMethodOrder`` ``task AppFilterMethodOrder``groovy语法重构<br>
+他的github地址，[https://github.com/pighead4u](https://github.com/pighead4u)<br>
+
+
 # 1. 效果奉上
 
 ![3.gif](http://upload-images.jianshu.io/upload_images/1857887-eb619b1815d64ba3.gif?imageMogr2/auto-orient/strip)
@@ -59,7 +69,7 @@
 832 ent   6127679 .........com.zjw.appmethodorder.BaseActivity.onDestroy ()V	BaseActivity.java
 832 ent   6133301 ..........com.zjw.appmethodorder.BaseActivity.baseOnDestroy ()V	BaseActivity.java
 ```
-OK！发现是不是很炫酷啊，下面来介绍该库的原理和项目源码暂时还未上传到github上（上传了求star!!!）
+OK！发现是不是很炫酷啊，下面来介绍该库的原理（求star!!!）
 # 2 原理
 本库其实并没有什么黑科技，本库也没有java代码，核心就是2个build.gradle中的task。首先，原理就是基于android sdk中提供的工具----traceview，和dmtracedump。traceview会生成.trace文件，该文件记录了函数调用顺序，函数耗时，函数调用次数等等有用的信息。而dmtracedump 工具就是基于trace文件生成报告的工具，具体用法不细说。dmtracedump 工具大家一般用的多的选项就是生成html报告，或者生成调用顺序图片（看起来很不直观）。首先说说为什么要用traceview，和dmtracedump来作为得到函数调用顺序的，因为这个工具既然能知道cpu执行时间和调用次数以及函数调用树（看出函数调用顺序很费劲）比如android studio是这样呈现.trace文件的解析视图的
 
@@ -140,68 +150,22 @@ public class Sort implements Comparable<Sort> {
 task AppOutPutMethodOrder() {
     doLast {
         def capturesDirPath = project.getProjectDir().getParentFile().path + File.separator + "captures";
-        def capturesDir = file(capturesDirPath);
-        def traceType = "trace"
-        if (!capturesDir.exists() || !capturesDir.canRead()) {
-            return
-        }
-        def map = new TreeMap<Long, String>(
-                new Comparator<Long>() {
-                    public int compare(Long obj1, Long obj2) {
-                        return obj2.compareTo(obj1);
-                    }
-                });
-        //遍历拿到trace 文件名 然后排序 找到最大时间数的trace就是最新的文件，拿到字符串
-        capturesDir.list(new FilenameFilter() {
-            @Override
-            boolean accept(File dir, String name) {
-                if (name.contains(traceType)) {
-                    def substring = name.substring(name.length() - 22, name.length() - 6).trim()
-                    String regEx = "[^0-9]"
-                    Pattern p = Pattern.compile(regEx)
-                    Matcher m = p.matcher(substring)
-                    def time = m.replaceAll("").trim()
-                    map.put(Long.parseLong(time), name)
-                }
-                return false
-            }
-        })
-        def lastTraceName = "";
-        Set<Long> keySet = map.keySet();
-        Iterator<Long> iterator = keySet.iterator();
-        while (iterator.hasNext()) {
-            Long key = iterator.next();
-            lastTraceName = map.get(key);
-            break;
-        }
+        def capturesDir = new File(capturesDirPath);
+        capturesDir.traverse {
+            if (it.isFile() && it.name.endsWith(".trace")) {
+                def orderName = it.name.replace("trace", "txt")
+                def orderFile = new File(capturesDirPath, orderName)
 
-        def tracePath = capturesDirPath + File.separator + lastTraceName
-        println "===== tracePath is  ${tracePath} =========="
-        def orderPath = capturesDirPath + File.separator + "base_order.txt"
-        def orderFile = file(orderPath)
-        if(orderFile.exists()){
-            orderFile.write("")
-        }
-        Runtime runtime = Runtime.getRuntime();
-        //说明：dmtracedump 为 android sdk自带工具，要执行dmtracedump命令则需要先添加环境变量
-        def baseComand = "dmtracedump  -ho " + tracePath + " >> " + orderPath
-        def command = ""
-        String[] cmdArray = null;
-        String osName = System.getProperty("os.name");
-        String osNameMatch = osName.toLowerCase();
-        if(osNameMatch.contains("windows")) {
-            command = "cmd /c start  /b "+baseComand;
-        }else {
-            cmdArray = ["bash", "-c", baseComand];
-        }
-        try {
-            if (cmdArray != null) {
-                runtime.exec(cmdArray);
-            } else {
-                runtime.exec(command);
+                //说明：dmtracedump 为 android sdk自带工具，要执行dmtracedump命令则需要先添加环境变量
+                def baseComand = "dmtracedump  -ho " + it.absolutePath + " >> " + orderFile.absolutePath
+                println baseComand
+                String osNameMatch = System.getProperty("os.name").toLowerCase();
+                if (osNameMatch.contains("windows")) {
+                    ("cmd /c start  /b " + baseComand).execute()
+                } else {
+                    ["bash", "-c", baseComand].execute()
+                }
             }
-        } catch (Exception e) {
-            println "=====Exception: ${e.getCause()}  =========="
         }
     }
 }
@@ -214,29 +178,36 @@ task AppOutPutMethodOrder() {
 //^.*xit.*$ //去除掉 含有 xit 字符串的行  然后替换为空
 // ^((?!XXX).)*$  //去除不包含XXX的行  然后替换为空
 //^\s+   //合并空行  然后替换为空
-task AppFilterMethodOrder(){
-    doLast{
+task AppFilterMethodOrder() {
+    doLast {
+        //TODO 替换为你想要过滤的包名
+        def filterPackageName = "com.zjw.appmethodorder"
+        //处理包名
+        def filterSignature = filterPackageName.replaceAll("[.]", "/")
+
         def capturesDirPath = project.getProjectDir().getParentFile().path + File.separator + "captures";
-        def orderPath = capturesDirPath + File.separator + "base_order.txt"
-        if(!file(orderPath).exists()){
-            return
-        }
-        BufferedReader inputStream = new BufferedReader(new FileReader(orderPath));
-        def filterOrderPath = new File(capturesDirPath + File.separator + "order.txt")
-        if (!filterOrderPath.exists()){
-            filterOrderPath.createNewFile();
-        }else {
-            filterOrderPath.write("")
-        }
-        String content ;
-        while ((content = inputStream.readLine()) != null) {
-            if(content.contains(" ent ")
-                    //com.zjw.appmethodorder 这里可以修改成你想要留下的包名对应的函数调用信息
-                    && content.contains("com.zjw.appmethodorder")
-            ){
-                filterOrderPath .append(content+"\n")
+        def capturesDir = new File(capturesDirPath);
+
+        capturesDir.traverse {
+            if (it.isFile() && it.name.endsWith(".txt") && !it.name.contains("--filter")) {
+                def orderName = it.name.replace(".txt", "--filter.txt")
+                def orderFile = new File(capturesDirPath, orderName)
+
+                it.eachLine { line ->
+
+                    if (line.contains(" ent ")
+                        //兼容不同版本traceview 有的是方法包名有的是方法签名
+                    && (line.contains(filterPackageName)
+                    || line.contains(filterSignature))
+                    ) {
+                        println line
+                        orderFile.append(line + "\n")
+                    }
+
+                }
             }
         }
+
     }
 }
 ```
@@ -250,19 +221,25 @@ task AppFilterMethodOrder(){
 
 ![QQ图片20170326003945.png](http://upload-images.jianshu.io/upload_images/1857887-92566765ccfa0d1a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-然后双击右侧面板的 ``AppOutPutMethodOrder``任务 如下图
-![QQ图片20170326004250.png](http://upload-images.jianshu.io/upload_images/1857887-317a7d8b5a7a5eff.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+然后双击右侧面板的 ``AppOutPutMethodOrder``任务 （特别注意：用Mac的同学注意了，现在已知双击执行task会输出空文件，貌似是studio的BUG，可以使用 ``./gradlew AppOutPutMethodOrder``执行该任务）如下图
 
-这一步完成就将在``captures``目录生成``base_order.txt``文件，该文件包含所有函数执行顺序
+![QQ图片20170327232840.png](http://upload-images.jianshu.io/upload_images/1857887-c9087359921f4bfd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-等待任务执行完成，再执行``AppFilterMethodOrder``任务 如下图窗口
+这一步完成就将在``captures``目录生成和trace文件同名的txt文件(如示例``com.zjw.appmethodorder_2017.03.25_21.41.trace``)，该文件包含所有函数执行顺序
+
+等待任务执行完成，再双击执行``AppFilterMethodOrder``任务 （特别注意：用Mac的同学注意了，现在已知双击执行task会输出空文件，貌似是studio的BUG，可以使用 ``./gradlew AppFilterMethodOrder``执行该任务）如下图窗口
 
 ![QQ图片20170326004734.png](http://upload-images.jianshu.io/upload_images/1857887-cc94b7192399ad15.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-该任务目的就是过滤其他非相关包名，留下自己包名的函数，任务执行完成将在``captures``目录生成``order.txt``文件
+该任务目的就是过滤其他非相关包名，留下自己包名的函数，任务执行完成将在``captures``目录生成和·``trace``文件同名+``--filter.txt``文件(例如示例``AppMethodOrder\captures\com.zjw.appmethodorder_2017.03.25_21.41--filter.txt``)
 如下图：
-![QQ图片20170326005010.png](http://upload-images.jianshu.io/upload_images/1857887-ebed756f9e9f0fa4.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-接下来打开``order.txt``文件就是上文效果中的那样啦。
+
+![QQ图片20170327233401.png](http://upload-images.jianshu.io/upload_images/1857887-3356ea138e58f14a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+接下来打开``trace``文件同名+``--filter.txt``文件(例如示例``AppMethodOrder\captures\com.zjw.appmethodorder_2017.03.25_21.41--filter.txt``)就是上文效果中的那样啦。
 
 # 4.关于扩展和改造
-![QQ图片20170326005314.png](http://upload-images.jianshu.io/upload_images/1857887-f45503243f36e281.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-这里稍作修改即可。注意``AppOutPutMethodOrder``任务一直是以最新时间生成的.trace文件作为生成base_order.txt基准的。
+
+![QQ图片20170327233843.png](http://upload-images.jianshu.io/upload_images/1857887-3818fa4ce352dacd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+这里改成你想要过滤的包名即可。
