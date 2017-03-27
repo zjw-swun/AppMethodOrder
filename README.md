@@ -215,6 +215,8 @@ task AppFilterMethodOrder() {
 # 3.如何使用
 讲了一堆原理我们来说说这个库怎么用吧。
 
+注意：请先确保 anroid sdk 中的dmtracedump 工具加入在你的环境变量中(Mac同学因为task面板执行的bug 需要把gradle添加到环境变量中)
+
 首先编译运行项目，然后点击下图的时钟（这是使用工具打trace start 和 end）进行操作，可以参考上文所说的动作简介（记住你操作想想你的生命周期函数调用顺序，待会可以和生成的captures目录下base_order.txt或者生成的order.txt中的函数顺序做做对比）然后再点一次下图那个时钟。还有一种记录trace start 和 end的方式就是在修改代码,即使用``android.os.Debug.startMethodTracing();``和``android.os.Debug.stopMethodTracing();``
 ![QQ图片20170326003311.png](http://upload-images.jianshu.io/upload_images/1857887-f4fa08b1a34858b3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 以上操作完成后即会在captures目录生成``com.zjw.appmethodorder_2017.03.25_21.41.trace``文件，android studio会默认打开一个可视化窗口
