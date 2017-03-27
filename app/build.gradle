@@ -28,7 +28,6 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     compile 'com.android.support:appcompat-v7:25.3.0'
-    compile 'com.android.support.constraint:constraint-layout:1.0.1'
     testCompile 'junit:junit:4.12'
 }
 
@@ -111,27 +110,38 @@ task AppOutPutMethodOrder() {
 //^.*xit.*$ //去除掉 含有 xit 字符串的行  然后替换为空
 // ^((?!XXX).)*$  //去除不包含XXX的行  然后替换为空
 //^\s+   //合并空行  然后替换为空
-task AppFilterMethodOrder(){
-    doLast{
+
+task AppFilterMethodOrder() {
+    doLast {
+        //TODO 替换为你想要过滤的包名
+        def filterPackageName = "com.zjw.appmethodorder"
+
+
+
         def capturesDirPath = project.getProjectDir().getParentFile().path + File.separator + "captures";
         def orderPath = capturesDirPath + File.separator + "base_order.txt"
-        if(!file(orderPath).exists()){
+        if (!file(orderPath).exists()) {
             return
         }
+        //处理包名
+        def filterSignature = filterPackageName.replaceAll("[.]","/")
+        print filterSignature
         BufferedReader inputStream = new BufferedReader(new FileReader(orderPath));
         def filterOrderPath = new File(capturesDirPath + File.separator + "order.txt")
-        if (!filterOrderPath.exists()){
+        if (!filterOrderPath.exists()) {
             filterOrderPath.createNewFile();
-        }else {
+        } else {
             filterOrderPath.write("")
         }
-        String content ;
+        String content;
         while ((content = inputStream.readLine()) != null) {
-            if(content.contains(" ent ")
-                    //com.zjw.appmethodorder 这里可以修改成你想要留下的包名对应的函数调用信息
-                    && content.contains("com.zjw.appmethodorder")
-            ){
-                filterOrderPath .append(content+"\n")
+
+            if (content.contains(" ent ")
+                    //兼容不同版本traceview 有的是方法包名有的是方法签名
+                    && (content.contains(filterPackageName)
+                    || content.contains(filterSignature))
+            ) {
+                filterOrderPath.append(content + "\n")
             }
         }
     }
