@@ -248,3 +248,8 @@ task AppFilterMethodOrder() {
 ![QQ图片20170327233843.png](http://upload-images.jianshu.io/upload_images/1857887-3818fa4ce352dacd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 这里改成你想要过滤的包名即可。
+
+# 5.小工具
+``Windows 环境下`` 可使用tool文件夹下的``Method-trace-analysis.jar`` 直接导入`.trace文件`，一键分析
+
+<img src="tool/tool.png"  />
