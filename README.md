@@ -182,6 +182,9 @@ task AppFilterMethodOrder() {
     doLast {
         //TODO 替换为你想要过滤的包名
         def filterPackageName = "com.zjw.appmethodorder"
+	if (project.hasProperty("package_name")) {
+            filterPackageName = project.getProperty("package_name")
+        }
         //处理包名
         def filterSignature = filterPackageName.replaceAll("[.]", "/")
 
@@ -229,7 +232,7 @@ task AppFilterMethodOrder() {
 
 这一步完成就将在``captures``目录生成和trace文件同名的txt文件(如示例``com.zjw.appmethodorder_2017.03.25_21.41.trace``)，该文件包含所有函数执行顺序
 
-等待任务执行完成，再双击执行``AppFilterMethodOrder``任务 （特别注意：用Mac的同学注意了，现在已知双击执行task会输出空文件，貌似是studio的BUG，可以使用 ``./gradlew AppFilterMethodOrder``执行该任务）如下图窗口
+等待任务执行完成，再双击执行``AppFilterMethodOrder``任务 （特别注意：用Mac的同学注意了，现在已知双击执行task会输出空文件，貌似是studio的BUG，可以使用 ``./gradlew AppFilterMethodOrder -P package_name=com.zjw.appmethodorder ``执行该任务）如下图窗口
 
 ![QQ图片20170326004734.png](http://upload-images.jianshu.io/upload_images/1857887-cc94b7192399ad15.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 该任务目的就是过滤其他非相关包名，留下自己包名的函数，任务执行完成将在``captures``目录生成和·``trace``文件同名+``--filter.txt``文件(例如示例``AppMethodOrder\captures\com.zjw.appmethodorder_2017.03.25_21.41--filter.txt``)
