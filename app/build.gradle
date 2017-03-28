@@ -38,7 +38,7 @@ task AppOutPutMethodOrder() {
             if (it.isFile() && it.name.endsWith(".trace")) {
                 def orderName = it.name.replace("trace", "txt")
                 def orderFile = new File(capturesDirPath, orderName)
-
+                orderFile.write("")
                 def dmtracedumpDir = getDmtraceDumpDir();
                 //说明：dmtracedump 为 android sdk自带工具，要执行dmtracedump命令则需要先添加环境变量
                 def baseComand = dmtracedumpDir + "dmtracedump  -ho " + it.absolutePath + " >> " + orderFile.absolutePath
@@ -99,6 +99,9 @@ task AppFilterMethodOrder() {
     doLast {
         //TODO 替换为你想要过滤的包名
         def filterPackageName = "com.zjw.appmethodorder"
+        if (project.hasProperty("package_name")) {
+            filterPackageName = project.getProperty("package_name")
+        }
         //处理包名
         def filterSignature = filterPackageName.replaceAll("[.]", "/")
 
@@ -108,8 +111,11 @@ task AppFilterMethodOrder() {
         capturesDir.traverse {
             if (it.isFile() && it.name.endsWith(".txt") && !it.name.contains("--filter")) {
                 def orderName = it.name.replace(".txt", "--filter.txt")
+                def orderTimeName = it.name.replace(".txt", "--filterTime.txt")
                 def orderFile = new File(capturesDirPath, orderName)
-
+                orderFile.write("")
+                def orderTimeFile = new File(capturesDirPath, orderTimeName)
+                orderTimeFile.write("")
                 it.eachLine { line ->
 
                     if (line.contains(" ent ")
@@ -117,8 +123,14 @@ task AppFilterMethodOrder() {
                     && (line.contains(filterPackageName)
                     || line.contains(filterSignature))
                     ) {
-                        println line
                         orderFile.append(line + "\n")
+                    }
+
+                    //生成带xit 和 ent 的trace行 函数耗时计算方式： xit字符后 数值 减去 ent字符后的 数字 （差值就是耗时 单位：微妙）
+                    //注意：好像函数体中含Thread.sleep的计算不准确
+                    if (line.contains(filterPackageName)
+                            || line.contains(filterSignature)){
+                        orderTimeFile.append(line + "\n")
                     }
 
                 }
