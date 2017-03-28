@@ -252,4 +252,4 @@ task AppFilterMethodOrder() {
 # 5.小工具
 ``Windows 环境下`` 可使用tool文件夹下的``Method-trace-analysis.jar`` 直接导入`.trace文件`，一键分析
 
-<img src="tool/tool.png" width="1000px" />
+<img src="tool/tool.png"  />
