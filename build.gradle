@@ -18,6 +18,12 @@ allprojects {
     }
 }
 
+subprojects {
+    println "this is an infomation from build.gradle on root"
+    apply from: rootProject.getRootDir().getAbsolutePath() + "/utils.gradle"
+}
+
+
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
