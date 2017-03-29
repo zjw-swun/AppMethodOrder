@@ -4,7 +4,7 @@
 
 项目地址：[https://github.com/zjw-swun/AppMethodOrder](https://github.com/zjw-swun/AppMethodOrder) 欢迎star
 
-作者列表（排名按代码贡献时间顺序）：二精-霁雪清虹，xingstarx，wing，pighead4u <br>
+作者列表（排名按代码贡献时间顺序）：二精-霁雪清虹，xingstarx，大精-wing，pighead4u ，Tesla ,lijunjie，三精-虹猫<br>
 
 特别鸣谢 ：
 [xingstarx]() 同学 ，提供兼容mac和linux的``task AppOutPutMethodOrder``代码<br>
@@ -155,9 +155,10 @@ task AppOutPutMethodOrder() {
             if (it.isFile() && it.name.endsWith(".trace")) {
                 def orderName = it.name.replace("trace", "txt")
                 def orderFile = new File(capturesDirPath, orderName)
-
+                orderFile.write("")
+                def dmtracedumpDir = getDmtraceDumpDir();
                 //说明：dmtracedump 为 android sdk自带工具，要执行dmtracedump命令则需要先添加环境变量
-                def baseComand = "dmtracedump  -ho " + it.absolutePath + " >> " + orderFile.absolutePath
+                def baseComand = dmtracedumpDir + "dmtracedump  -ho " + it.absolutePath + " >> " + orderFile.absolutePath
                 println baseComand
                 String osNameMatch = System.getProperty("os.name").toLowerCase();
                 if (osNameMatch.contains("windows")) {
@@ -170,6 +171,38 @@ task AppOutPutMethodOrder() {
     }
 }
 
+/**
+ * read the sdk dir from local.properties
+ * eg :
+ *  sdk.dir = /home/env/sdk
+ *  so:
+ *   dmtracedump.dir = /home/env/sdk/platform-tools
+ *
+ * @return the dir which dmtracedump tools exists
+ */
+def getDmtraceDumpDir() {
+    def rootDir = project.rootDir
+    def localProperties = new File(rootDir, "local.properties")
+    def sdkDir = null;
+    if (localProperties.exists()) {
+        Properties properties = new Properties()
+        localProperties.withInputStream { instr ->
+            properties.load(instr)
+        }
+        sdkDir = properties.getProperty('sdk.dir')
+    }
+    if (sdkDir == null || !(new File(sdkDir).exists())) {
+        sdkDir = android.getSdkDirectory().getAbsolutePath()
+    }
+    if (sdkDir == null || !(new File(sdkDir).exists())) {
+        sdkDir = android.plugin.getSdkFolder().getAbsolutePath()
+    }
+    def dmtraceDumpToolDir = sdkDir + File.separator + "platform-tools" + File.separator
+    if (new File(dmtraceDumpToolDir).exists()) {
+        return dmtraceDumpToolDir;
+    }
+    return ""
+}
 
 
 //这里AppFilterMethodOrder 任务其实也不需要 执行找到 \captures 目录找到 base_order.txt
@@ -178,11 +211,12 @@ task AppOutPutMethodOrder() {
 //^.*xit.*$ //去除掉 含有 xit 字符串的行  然后替换为空
 // ^((?!XXX).)*$  //去除不包含XXX的行  然后替换为空
 //^\s+   //合并空行  然后替换为空
+
 task AppFilterMethodOrder() {
     doLast {
         //TODO 替换为你想要过滤的包名
         def filterPackageName = "com.zjw.appmethodorder"
-	if (project.hasProperty("package_name")) {
+        if (project.hasProperty("package_name")) {
             filterPackageName = project.getProperty("package_name")
         }
         //处理包名
@@ -194,8 +228,11 @@ task AppFilterMethodOrder() {
         capturesDir.traverse {
             if (it.isFile() && it.name.endsWith(".txt") && !it.name.contains("--filter")) {
                 def orderName = it.name.replace(".txt", "--filter.txt")
+                def orderTimeName = it.name.replace(".txt", "--timefilter.txt")
                 def orderFile = new File(capturesDirPath, orderName)
-
+                orderFile.write("")
+                def orderTimeFile = new File(capturesDirPath, orderTimeName)
+                orderTimeFile.write("")
                 it.eachLine { line ->
 
                     if (line.contains(" ent ")
@@ -203,13 +240,20 @@ task AppFilterMethodOrder() {
                     && (line.contains(filterPackageName)
                     || line.contains(filterSignature))
                     ) {
-                        println line
                         orderFile.append(line + "\n")
+                    }
+
+                    //生成带xit 和 ent 的trace行 函数耗时计算方式： xit字符后 数值 减去 ent字符后的 数字 （差值就是耗时 单位：微妙）
+                    //注意：好像函数体中含Thread.sleep的计算不准确
+                    if (line.contains(filterPackageName)
+                            || line.contains(filterSignature)){
+                        orderTimeFile.append(line + "\n")
                     }
 
                 }
             }
         }
+
 
     }
 }
@@ -248,3 +292,19 @@ task AppFilterMethodOrder() {
 ![QQ图片20170327233843.png](http://upload-images.jianshu.io/upload_images/1857887-3818fa4ce352dacd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 这里改成你想要过滤的包名即可。
+
+# 5.小工具
+``Windows 环境下`` 可使用tool文件夹下的``Method-trace-analysis.jar`` 直接导入`.trace文件`，一键分析
+
+![](tool/tool.png)
+
+# 6.执行AppFilterMethodOrder 任务 新增后缀为--filterTime.txt 的文件，用于计算方法耗时
+
+![QQ图片20170329005447.png](http://upload-images.jianshu.io/upload_images/1857887-2bf1a8f14bd7a163.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+如上图例：``MainActivity.onPause``方法执行耗时为``149231``-``148152`` = ``1079``,最终耗时为 ``1079``μs(微秒) 约为 1毫秒
+
+
+ 1.生成带xit 和 ent 的trace行 函数耗时计算方式： xit字符后 数值 减去 ent字符后的 数字 （差值就是耗时 单位：微妙）<br>
+   2.注意：函数体中含Thread.sleep的计算不准确 <br>
