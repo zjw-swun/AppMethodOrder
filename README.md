@@ -263,8 +263,8 @@ task AppFilterMethodOrder() {
 讲了一堆原理我们来说说这个库怎么用吧。
 
 - 下载utils.gradle到工程根目录
-- 修改根目录下build.gradle,增加        apply from: rootProject.getRootDir().getAbsolutePath() + "/utils.gradle" 对utils.gradle的引用
-- 使用下面的详细介绍生成trace文件,具体可参考本工程根目录下的build.gradle.
+- 修改根目录下build.gradle,增加        apply from: rootProject.getRootDir().getAbsolutePath() + "/utils.gradle" 对utils.gradle的引用,具体可参考本工程根目录下的build.gradle.
+- 使用下面的详细介绍生成trace文件
 - 使用下面的命令生成堆栈文件 ./gradlew AppOutPutMethodOrder
 - 上面命令文件内容太多时,通过这个命令进行过滤包含需要过滤的字符串 ./gradlew AppFilterMethodOrder -P package_name=com.zjw.appmethodorder
 
