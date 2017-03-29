@@ -1,0 +1,199 @@
+task file2json() {
+    doLast{
+        println "---------JsonOutTask Start----------"
+        def capturesDirPath =getProjectDir().getParentFile().path + File.separator + "captures"
+        def capturesDir = new File(capturesDirPath);
+        if (capturesDir.exists()){
+            capturesDir.traverse {
+                if (it.isFile() && it.name.endsWith("--filter.txt")) {
+                    println "---------do for ${it.name}---------"
+                    MethodJson beforeJson = new MethodJson();
+                    beforeJson.level = -1;
+                    File file = new File(capturesDirPath,it.name);
+                    File jsonFile = new File(capturesDirPath,it.name.replace(".txt", ".json"))
+                    try{
+                        BufferedReader reader = new BufferedReader(new FileReader(file));
+                        String s;
+                        try{
+                            while((s=reader.readLine())!=null){
+                                MethodJson json = MethodJson.getJsonObject(s);
+
+                                if (beforeJson.level==-1){
+                                    beforeJson.childJson.add(json);
+                                    json.parent = beforeJson;
+                                    beforeJson = json;
+                                    continue;
+                                }
+                                while(json.level<beforeJson.level){
+                                    //return to last method
+                                    beforeJson = beforeJson.parent;
+                                }
+                                if (json.level == beforeJson.level){
+                                    if (json.methodName.equals(beforeJson.methodName)){
+                                        //method close
+                                        beforeJson.useTime = json.useTime - beforeJson.useTime;
+                                        beforeJson.exit = true;
+                                        beforeJson = beforeJson.parent;
+                                        continue;
+                                    }else{
+                                        //todo give it to parent
+                                    }
+                                }
+                                if(json.level>beforeJson.level){
+                                    //add child
+                                    json.positionInParent = ++beforeJson.pointerToCurrentChild;
+                                    beforeJson.childJson.add(json);
+                                }
+                                json.parent = beforeJson;
+                                beforeJson = json;
+                            }
+                            println "---------read success -----------"
+                        }catch (IOException e){
+
+                        }
+                    }catch (FileNotFoundException e){
+                        e.printStackTrace();
+                    }
+
+                    while (beforeJson.parent!=null){
+                        beforeJson = beforeJson.parent;
+                    }
+
+
+                    try{
+                        BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile));
+                        for (MethodJson json : beforeJson.childJson) {
+                            writer.write(json.toString());
+                            writer.flush();
+                        }
+                        writer.close();
+                        println "---------write success-----------"
+                    }catch (IOException e){
+
+                    }
+                }
+            }
+        }else {
+            println "---------${capturesDir} not exist---------"
+        }
+
+        println "---------JsonOutTask End----------"
+    }
+}
+
+
+
+class MethodJson {
+    String methodName;
+    int threadUid;
+    boolean exit = false;
+    int useTime;
+    int level;
+    LinkedList<String> inputType = new LinkedList<>();
+    String returnType;
+    int positionInParent = -1;
+    int pointerToCurrentChild = -1;
+    LinkedList<MethodJson> childJson = new LinkedList<>();
+    MethodJson parent;
+
+    public MethodJson() {
+    }
+
+    public MethodJson(String methodName, int threadUid, int useTime, int level, LinkedList<String> inputType, String returnType) {
+        this.methodName = methodName;
+        this.threadUid = threadUid;
+        this.useTime = useTime;
+        this.level = level;
+        this.inputType.addAll(inputType);
+        this.returnType = returnType;
+    }
+
+    @Override
+    public String toString() {
+
+        StringBuilder tabs = new StringBuilder();
+        if (parent!=null){
+            for (int i = 0;i<parent.level+1;i++){
+                tabs.append("\t");
+            }
+        }
+        String one_more_tabs = tabs+"\t";
+        String two_more_tabs = one_more_tabs+"\t";
+
+
+        StringBuilder params = new StringBuilder();
+        if (inputType.isEmpty()){
+            params.append("null");
+        }else {
+            params.append("{\n");
+            for (int i = 0;i<inputType.size();i++){
+                params.append(two_more_tabs);
+                params.append(inputType.get(i));
+                if (i!=inputType.size()-1){
+                    params.append(",\n");
+                }
+            }
+            params.append("\n"+one_more_tabs+"}");
+        }
+
+
+        StringBuilder child = new StringBuilder();
+        if (childJson.size()==0){
+            child.append("null\n");
+        }else {
+            for (MethodJson json : childJson) {
+                child.append(json);
+            }
+        }
+
+        StringBuilder builder = new StringBuilder();
+        builder.append("\n"+tabs)
+                .append("{\n")
+                .append(one_more_tabs)
+                .append("\"methodName\":\"" + methodName+"\",\n")
+                .append(one_more_tabs)
+                .append("\"threadUID\":"+threadUid+",\n")
+                .append(one_more_tabs)
+                .append("\"useTime(us)\":"+useTime+",\n")
+                .append(one_more_tabs)
+                .append("\"level\":"+level+",\n")
+                .append(one_more_tabs)
+                .append("\"params\":"+params+",\n")
+                .append(one_more_tabs)
+                .append("\"return\":\""+returnType+"\",\n")
+                .append(one_more_tabs)
+                .append("\"nextFunction\":"+child)
+                .append(tabs)
+                .append("},\n");
+        return builder.toString();
+    }
+
+    static MethodJson getJsonObject(String s){
+        String[] res = s.split(" +|\\t|\\)");
+        int thread = Integer.valueOf(res[0]);
+        int time = Integer.valueOf(res[2]);
+        int level = 0;
+        for(char c:res[3].toCharArray()){
+            if (c!='.'){
+                break;
+            }
+            level++;
+        }
+        String methodName = res[3].substring(level);
+        String[] input = res[4].replace("(","").split(";");
+        LinkedList<String> list = new LinkedList<>();
+        for (String s1 : input) {
+            list.add(s1);
+        }
+        String returnType = res[5];
+
+        return new MethodJson(
+                methodName,
+                thread,
+                time,
+                level,
+                list,
+                returnType
+        );
+    }
+}
