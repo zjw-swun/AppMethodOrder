@@ -301,9 +301,10 @@ task AppFilterMethodOrder() {
 这里改成你想要过滤的包名即可。
 
 # 5.小工具
-``Windows 环境下`` 可使用tool文件夹下的``Method-trace-analysis.jar`` 直接导入`.trace文件`，一键分析
+ - ``Windows 环境下`` 可使用tool文件夹下的``Method-trace-analysis.jar`` 直接导入`.trace文件`，一键分析
 
 ![](tool/tool.png)
+ - 小工具源码: https://github.com/Harlber/Method_Trace_Tool  可自行修改源码以兼容Mac/Linux
 
 # 6.执行AppFilterMethodOrder 任务 新增后缀为--filterTime.txt 的文件，用于计算方法耗时
 
