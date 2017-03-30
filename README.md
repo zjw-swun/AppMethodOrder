@@ -315,3 +315,62 @@ task AppFilterMethodOrder() {
 
  1.生成带xit 和 ent 的trace行 函数耗时计算方式： xit字符后 数值 减去 ent字符后的 数字 （差值就是耗时 单位：微妙）<br>
    2.注意：函数体中含Thread.sleep的计算不准确 <br>
+
+# 7.新增将文件转换成JSON对象的工具
+
+![file2json.png](images/file2json.png)
+复制file2json.gradle到app路径下，给build.gradle中添加
+```
+apply from: 'file2json.gradle'
+```
+在文件中修改参数，默认的是解析后缀为"--filter.txt"，地址在captures文件夹下
+
+MAC用户可以在terminal中使用
+```
+./gradlew file2json
+```
+在文件夹中可以看到.json后缀的文件。
+
+json格式如下
+```
+{
+	"methodName":"com.xxx.sample.MainActivity$2.onClick",
+	"threadUID":19903,
+	"useTime(us)":7973,
+	"level":2,
+	"params":{
+		Landroid/view/View
+	},
+	"return":"V",
+	"nextFunction":
+			{
+				"methodName":"com.xxx.sample.Fun.<init>",
+				"threadUID":19903,
+				"useTime(us)":33,
+				"level":3,
+				"params":{
+					
+				},
+				"return":"V",
+				"nextFunction":null
+			},
+
+			{
+				"methodName":"com.xxx.sample.MainActivity$Callback.<init>",
+				"threadUID":19903,
+				"useTime(us)":20,
+				"level":3,
+				"params":{
+					Lcom/xxx/sample/MainActivity
+				},
+				"return":"V",
+				"nextFunction":null
+			},
+}
+```
+注意：文件最后会多一个','
+
+TODO
+- 解决params数组为空不显示null的问题（如图）
+- 调用链可能不准确的问题
+- 静态页面分析工具

@@ -30,115 +30,115 @@ dependencies {
 
 //核心任务：在captures文件目录下输出 基于最新.trace文件的函数调用信息的txt版本
 //说明：dmtracedump 为 android sdk自带工具，要执行dmtracedump命令则需要先添加环境变量
-task AppOutPutMethodOrder() {
-    doLast {
-        def capturesDirPath = project.getProjectDir().getParentFile().path + File.separator + "captures";
-        def capturesDir = new File(capturesDirPath);
-        capturesDir.traverse {
-            if (it.isFile() && it.name.endsWith(".trace")) {
-                def orderName = it.name.replace("trace", "txt")
-                def orderFile = new File(capturesDirPath, orderName)
-                orderFile.write("")
-                def dmtracedumpDir = getDmtraceDumpDir();
-                //说明：dmtracedump 为 android sdk自带工具，要执行dmtracedump命令则需要先添加环境变量
-                def baseComand = dmtracedumpDir + "dmtracedump  -ho " + it.absolutePath + " >> " + orderFile.absolutePath
-                println baseComand
-                String osNameMatch = System.getProperty("os.name").toLowerCase();
-                if (osNameMatch.contains("windows")) {
-                    ("cmd /c start  /b " + baseComand).execute()
-                } else {
-                    ["bash", "-c", baseComand].execute()
-                }
-            }
-        }
-    }
-}
-
-/**
- * read the sdk dir from local.properties
- * eg :
- *  sdk.dir = /home/env/sdk
- *  so:
- *   dmtracedump.dir = /home/env/sdk/platform-tools
- *
- * @return the dir which dmtracedump tools exists
- */
-def getDmtraceDumpDir() {
-    def rootDir = project.rootDir
-    def localProperties = new File(rootDir, "local.properties")
-    def sdkDir = null;
-    if (localProperties.exists()) {
-        Properties properties = new Properties()
-        localProperties.withInputStream { instr ->
-            properties.load(instr)
-        }
-        sdkDir = properties.getProperty('sdk.dir')
-    }
-    if (sdkDir == null || !(new File(sdkDir).exists())) {
-        sdkDir = android.getSdkDirectory().getAbsolutePath()
-    }
-    if (sdkDir == null || !(new File(sdkDir).exists())) {
-        sdkDir = android.plugin.getSdkFolder().getAbsolutePath()
-    }
-    def dmtraceDumpToolDir = sdkDir + File.separator + "platform-tools" + File.separator
-    if (new File(dmtraceDumpToolDir).exists()) {
-        return dmtraceDumpToolDir;
-    }
-    return ""
-}
-
-
-//这里AppFilterMethodOrder 任务其实也不需要 执行找到 \captures 目录找到 base_order.txt
-//用Notepad++ 使用正则 先过滤 带 xit 的行 （我们只关注ent 行就行，ent代表进入执行函数　xit代表退出函数）再过滤掉你不关心的包名
-// Notepad++ 中过滤将会使用到的命令行如下
-//^.*xit.*$ //去除掉 含有 xit 字符串的行  然后替换为空
-// ^((?!XXX).)*$  //去除不包含XXX的行  然后替换为空
-//^\s+   //合并空行  然后替换为空
-
-task AppFilterMethodOrder() {
-    doLast {
-        //TODO 替换为你想要过滤的包名
-        def filterPackageName = "com.zjw.appmethodorder"
-        if (project.hasProperty("package_name")) {
-            filterPackageName = project.getProperty("package_name")
-        }
-        //处理包名
-        def filterSignature = filterPackageName.replaceAll("[.]", "/")
-
-        def capturesDirPath = project.getProjectDir().getParentFile().path + File.separator + "captures";
-        def capturesDir = new File(capturesDirPath);
-
-        capturesDir.traverse {
-            if (it.isFile() && it.name.endsWith(".txt") && !it.name.contains("--filter")) {
-                def orderName = it.name.replace(".txt", "--filter.txt")
-                def orderTimeName = it.name.replace(".txt", "--filterTime.txt")
-                def orderFile = new File(capturesDirPath, orderName)
-                orderFile.write("")
-                def orderTimeFile = new File(capturesDirPath, orderTimeName)
-                orderTimeFile.write("")
-                it.eachLine { line ->
-
-                    if (line.contains(" ent ")
-                        //兼容不同版本traceview 有的是方法包名有的是方法签名
-                    && (line.contains(filterPackageName)
-                    || line.contains(filterSignature))
-                    ) {
-                        orderFile.append(line + "\n")
-                    }
-
-                    //生成带xit 和 ent 的trace行 函数耗时计算方式： xit字符后 数值 减去 ent字符后的 数字 （差值就是耗时 单位：微妙）
-                    //注意：好像函数体中含Thread.sleep的计算不准确
-                    if (line.contains(filterPackageName)
-                            || line.contains(filterSignature)){
-                        orderTimeFile.append(line + "\n")
-                    }
-
-                }
-            }
-        }
-
-
-    }
-}
-
-
+//task AppOutPutMethodOrder() {
+//    doLast {
+//        def capturesDirPath = project.getProjectDir().getParentFile().path + File.separator + "captures";
+//        def capturesDir = new File(capturesDirPath);
+//        capturesDir.traverse {
+//            if (it.isFile() && it.name.endsWith(".trace")) {
+//                def orderName = it.name.replace("trace", "txt")
+//                def orderFile = new File(capturesDirPath, orderName)
+//                orderFile.write("")
+//                def dmtracedumpDir = getDmtraceDumpDir();
+//                //说明：dmtracedump 为 android sdk自带工具，要执行dmtracedump命令则需要先添加环境变量
+//                def baseComand = dmtracedumpDir + "dmtracedump  -ho " + it.absolutePath + " >> " + orderFile.absolutePath
+//                println baseComand
+//                String osNameMatch = System.getProperty("os.name").toLowerCase();
+//                if (osNameMatch.contains("windows")) {
+//                    ("cmd /c start  /b " + baseComand).execute()
+//                } else {
+//                    ["bash", "-c", baseComand].execute()
+//                }
+//            }
+//        }
+//    }
+//}
+//
+///**
+// * read the sdk dir from local.properties
+// * eg :
+// *  sdk.dir = /home/env/sdk
+// *  so:
+// *   dmtracedump.dir = /home/env/sdk/platform-tools
+// *
+// * @return the dir which dmtracedump tools exists
+// */
+//def getDmtraceDumpDir() {
+//    def rootDir = project.rootDir
+//    def localProperties = new File(rootDir, "local.properties")
+//    def sdkDir = null;
+//    if (localProperties.exists()) {
+//        Properties properties = new Properties()
+//        localProperties.withInputStream { instr ->
+//            properties.load(instr)
+//        }
+//        sdkDir = properties.getProperty('sdk.dir')
+//    }
+//    if (sdkDir == null || !(new File(sdkDir).exists())) {
+//        sdkDir = android.getSdkDirectory().getAbsolutePath()
+//    }
+//    if (sdkDir == null || !(new File(sdkDir).exists())) {
+//        sdkDir = android.plugin.getSdkFolder().getAbsolutePath()
+//    }
+//    def dmtraceDumpToolDir = sdkDir + File.separator + "platform-tools" + File.separator
+//    if (new File(dmtraceDumpToolDir).exists()) {
+//        return dmtraceDumpToolDir;
+//    }
+//    return ""
+//}
+//
+//
+////这里AppFilterMethodOrder 任务其实也不需要 执行找到 \captures 目录找到 base_order.txt
+////用Notepad++ 使用正则 先过滤 带 xit 的行 （我们只关注ent 行就行，ent代表进入执行函数　xit代表退出函数）再过滤掉你不关心的包名
+//// Notepad++ 中过滤将会使用到的命令行如下
+////^.*xit.*$ //去除掉 含有 xit 字符串的行  然后替换为空
+//// ^((?!XXX).)*$  //去除不包含XXX的行  然后替换为空
+////^\s+   //合并空行  然后替换为空
+//
+//task AppFilterMethodOrder() {
+//    doLast {
+//        //TODO 替换为你想要过滤的包名
+//        def filterPackageName = "com.zjw.appmethodorder"
+//        if (project.hasProperty("package_name")) {
+//            filterPackageName = project.getProperty("package_name")
+//        }
+//        //处理包名
+//        def filterSignature = filterPackageName.replaceAll("[.]", "/")
+//
+//        def capturesDirPath = project.getProjectDir().getParentFile().path + File.separator + "captures";
+//        def capturesDir = new File(capturesDirPath);
+//
+//        capturesDir.traverse {
+//            if (it.isFile() && it.name.endsWith(".txt") && !it.name.contains("--filter")) {
+//                def orderName = it.name.replace(".txt", "--filter.txt")
+//                def orderTimeName = it.name.replace(".txt", "--filterTime.txt")
+//                def orderFile = new File(capturesDirPath, orderName)
+//                orderFile.write("")
+//                def orderTimeFile = new File(capturesDirPath, orderTimeName)
+//                orderTimeFile.write("")
+//                it.eachLine { line ->
+//
+//                    if (line.contains(" ent ")
+//                        //兼容不同版本traceview 有的是方法包名有的是方法签名
+//                    && (line.contains(filterPackageName)
+//                    || line.contains(filterSignature))
+//                    ) {
+//                        orderFile.append(line + "\n")
+//                    }
+//
+//                    //生成带xit 和 ent 的trace行 函数耗时计算方式： xit字符后 数值 减去 ent字符后的 数字 （差值就是耗时 单位：微妙）
+//                    //注意：好像函数体中含Thread.sleep的计算不准确
+//                    if (line.contains(filterPackageName)
+//                            || line.contains(filterSignature)){
+//                        orderTimeFile.append(line + "\n")
+//                    }
+//
+//                }
+//            }
+//        }
+//
+//
+//    }
+//}
+//
+//
