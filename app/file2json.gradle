@@ -16,7 +16,7 @@ task file2json() {
                         String s;
                         try{
                             while((s=reader.readLine())!=null){
-                                MethodJson json = MethodJson.getJsonObject(s);
+                                MethodJson json = MethodJson.getJsonObject(s.replace("-"," "));
 
                                 if (beforeJson.level==-1){
                                     beforeJson.childJson.add(json);
