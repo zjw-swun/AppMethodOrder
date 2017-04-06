@@ -76,7 +76,6 @@ task file2json() {
         }else {
             println "---------${capturesDir} not exist---------"
         }
-
         println "---------JsonOutTask End----------"
     }
 }
@@ -122,13 +121,13 @@ class MethodJson {
 
 
         StringBuilder params = new StringBuilder();
-        if (inputType.isEmpty()){
+        if (inputType.get(0).equals("")){
             params.append("null");
         }else {
             params.append("{\n");
             for (int i = 0;i<inputType.size();i++){
                 params.append(two_more_tabs);
-                params.append(inputType.get(i));
+                params.append("\""+inputType.get(i)+"\"");
                 if (i!=inputType.size()-1){
                     params.append(",\n");
                 }
@@ -170,30 +169,34 @@ class MethodJson {
 
     static MethodJson getJsonObject(String s){
         String[] res = s.split(" +|\\t|\\)");
-        int thread = Integer.valueOf(res[0]);
-        int time = Integer.valueOf(res[2]);
-        int level = 0;
-        for(char c:res[3].toCharArray()){
-            if (c!='.'){
-                break;
+        try{
+            int thread = Integer.valueOf(res[0]);
+            int time = Integer.valueOf(res[2]);
+            int level = 0;
+            for(char c:res[3].toCharArray()){
+                if (c!='.'){
+                    break;
+                }
+                level++;
             }
-            level++;
-        }
-        String methodName = res[3].substring(level);
-        String[] input = res[4].replace("(","").split(";");
-        LinkedList<String> list = new LinkedList<>();
-        for (String s1 : input) {
-            list.add(s1);
-        }
-        String returnType = res[5];
+            String methodName = res[3].substring(level);
+            String[] input = res[4].replace("(","").split(";");
+            LinkedList<String> list = new LinkedList<>();
+            for (String s1 : input) {
+                list.add(s1);
+            }
+            String returnType = res[5];
 
-        return new MethodJson(
-                methodName,
-                thread,
-                time,
-                level,
-                list,
-                returnType
-        );
+            return new MethodJson(
+                    methodName,
+                    thread,
+                    time,
+                    level,
+                    list,
+                    returnType
+            );
+        }catch (Exception e){
+            return null;
+        }
     }
 }
