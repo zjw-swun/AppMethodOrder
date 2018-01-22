@@ -71,16 +71,16 @@
 
  
 ## 3.1 生成trace文件的方式
-生成trace文件的方式有2种一种是``掐表``操作，一种是在项目中使用代码操作
+生成trace文件的方式有2种一种是``掐表``操作，一种是在项目中使用代码操作<br>
 先介绍掐表生成trace文件<br>
-**android studio 3.0以下版本操作如下**
+**android studio 3.0以下版本操作如下**<br>
 第一次点击下图时钟icon代表开始掐表，然后回到您的app，进行您要跟踪函数调用顺序的操作，再次点击下图时钟icon代表结束掐表
 ![图片描述](https://github.com/zjw-swun/AppMethodOrder/blob/master/images/0.png)
 掐表结束后即会在captures目录生成``com.zjw.appmethodorder_2017.03.25_21.41.trace``文件，android studio会默认打开一个可视化窗口
 
 ![图片描述](https://github.com/zjw-swun/AppMethodOrder/blob/master/images/00.png)
 
-**android studio 3.0版本操作如下**<br>
+**android studio 3.0版本操作如下**<br><br>
 点击CPU 进入CPU面板，然后选择Instrumented选项（Sampled和Instrumented区别在于，Sampled函数调用采样率低生成的trace文件小，采样率低会造成大部分函数调用顺序漏记，Instrumented相当于无损采样生成文件大），第一次点击下图红色圆形icon代表开始掐表，然后回到您的app，进行您要跟踪函数调用顺序的操作，再次点击下图红色圆形icon代表结束掐表，
 ![图片描述](https://github.com/zjw-swun/AppMethodOrder/blob/master/images/1.png)
 ![图片描述](https://github.com/zjw-swun/AppMethodOrder/blob/master/images/2.png)
