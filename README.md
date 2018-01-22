@@ -102,7 +102,7 @@ appMethodOrder小工具改良自 [https://github.com/Harlber/Method_Trace_Tool](
 
 ![图片描述](https://github.com/zjw-swun/AppMethodOrder/blob/master/images/4.png)
 
-如上图所示，查询结构存在四个tab，第一个``threadID``代表线程id，第二个``threadName``代表线程名，第三个``usecs``代表函数耗时，第四个``method``代表函数名+类名，（查询结果是以时间排序的）
+如上图所示，查询结构存在四个tab，第一个``threadID``代表线程id，第二个``threadName``代表线程名，第三个``usecs``代表函数耗时(单位微秒，有时候耗时为-1不要惊讶，是因为该次掐表刚好没包括到其函数结束时机)，第四个``method``代表函数名+类名，（查询结果是以时间排序的）
 
 # 4. 海量信息的处理手段
 不难发现trace文件时间越长意味着记录的信息也会越来越多，这时候单纯以包名过滤其实满足不了需求，比如我们想通过3个条件（例如 主线程+含zjw包名的 or android.view）来过滤出结果，以下将给出解决办法。
