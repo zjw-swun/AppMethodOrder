@@ -8,7 +8,7 @@
 
 # 1. 效果奉上
 
-![3.gif](http://upload-images.jianshu.io/upload_images/1857887-eb619b1815d64ba3.gif?imageMogr2/auto-orient/strip)
+![3.gif](http://upload-images.jianshu.io/upload_https://github.com/zjw-swun/AppMethodOrder/blob/master/images/1857887-eb619b1815d64ba3.gif?imageMogr2/auto-orient/strip)
 
 动作简介：首先点击MainActivity的自定义MyTextView然后进入SecondActivity再点击textview之后finish跳转回MainActivity<br>
 下面是库处理过所得到的函数调用顺序``order.txt``文件（我这里屏蔽了jdk函数，第三方库函数，以及android sdk中函数，换句话说我就保留了我自己包名中的函数顺序）
@@ -75,15 +75,15 @@
 先介绍掐表生成trace文件
 **android studio 3.0以下版本操作如下**
 第一次点击下图时钟icon代表开始掐表，然后回到您的app，进行您要跟踪函数调用顺序的操作，再次点击下图时钟icon代表结束掐表
-![QQ图片20170326003311.png](http://upload-images.jianshu.io/upload_images/1857887-f4fa08b1a34858b3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![QQ图片20170326003311.png](http://upload-images.jianshu.io/upload_https://github.com/zjw-swun/AppMethodOrder/blob/master/images/1857887-f4fa08b1a34858b3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 掐表结束后即会在captures目录生成``com.zjw.appmethodorder_2017.03.25_21.41.trace``文件，android studio会默认打开一个可视化窗口
 
-![QQ图片20170326003945.png](http://upload-images.jianshu.io/upload_images/1857887-92566765ccfa0d1a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![QQ图片20170326003945.png](http://upload-images.jianshu.io/upload_https://github.com/zjw-swun/AppMethodOrder/blob/master/images/1857887-92566765ccfa0d1a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 **android studio 3.0版本操作如下**
 点击CPU 进入CPU面板，然后选择Instrumented选项（Sampled和Instrumented区别在于，Sampled函数调用采样率低生成的trace文件小，采样率低会造成大部分函数调用顺序漏记，Instrumented相当于无损采样生成文件大），第一次点击下图红色圆形icon代表开始掐表，然后回到您的app，进行您要跟踪函数调用顺序的操作，再次点击下图红色圆形icon代表结束掐表，
-![图片描述][images/1.png]
-![图片描述][images/2.png]
+![图片描述][https://github.com/zjw-swun/AppMethodOrder/blob/master/images/1.png]
+![图片描述][https://github.com/zjw-swun/AppMethodOrder/blob/master/images/2.png]
 结束掐表就会在``C:\Users\hasee\AppData\Local\Temp\cpu_trace.trace``(本人是windows环境，使用windows系统可以参照，使用Mac的同学 cd /private/var/folders在folders 搜索cpu_trace.trace)，存在cpu_trace.trace时会新建cpu_trace1.tracecpu_trace2.trace 以此类推
 
 第二种生成trace文件的方式就是在您的项目代码中使用
@@ -97,10 +97,10 @@ appMethodOrder小工具改良自 [https://github.com/Harlber/Method_Trace_Tool](
 感谢Harlber[https://github.com/Harlber](https://github.com/Harlber)
 
 将trace文件拖拽到小工具``File Path``左边区域
-![图片描述][images/3.png]
+![图片描述][https://github.com/zjw-swun/AppMethodOrder/blob/master/images/3.png]
  ``package name``处填入您需要过滤的目标包名，或者填入空串（空串将生成所有线程所有包名的函数调用顺序）
 
-![图片描述][images/4.png]
+![图片描述][https://github.com/zjw-swun/AppMethodOrder/blob/master/images/4.png]
 
 如上图所示，查询结构存在四个tab，第一个``threadID``代表线程id，第二个``threadName``代表线程名，第三个``usecs``代表函数耗时，第四个``method``代表函数名+类名，（查询结果是以时间排序的）
 
@@ -112,7 +112,7 @@ appMethodOrder小工具会在该jar所在目录生成``appMethodOrderTrace.txt``
 //从text 导入数据到 mysql （以下语句在mysql中实验是OK的）
 ``truncate table app;``
 ``LOAD DATA LOCAL INFILE 'C:/Users/hasee/Desktop/appMethodOrderTrace.txt' INTO TABLE `app`;``
-![图片描述][images/5.png]
+![图片描述][https://github.com/zjw-swun/AppMethodOrder/blob/master/images/5.png]
 
 app表结创建语句如下
 ```
@@ -136,7 +136,7 @@ WHERE
 	app.threadName = "main" AND method like "%自定义包名%"
 ORDER BY
 	app.usecs DESC
-![图片描述][images/6.png]
+![图片描述][https://github.com/zjw-swun/AppMethodOrder/blob/master/images/6.png]
 
 # 5. 计算得出的函数耗时不是准确的时间
 根据官方文档(https://developer.android.com/studio/profile/traceview.html) ``Interpreted code runs more slowly when profiling is enabled. Don't try to generate absolute timings from the profiler results (such as, "function X takes 2.5 seconds to run"). The times are only useful in relation to other profile output, so you can see if changes have made the code faster or slower relative to a previous profiling run.``所知(我也用了代码在函数开头结尾用System.nanoTime()时间相减，发现，生成trace的时候确实会拖慢所以函数的执行时间，比System.nanoTime()时间相减得出的时间差的比较多)。原因是trace过程会整体拖慢JVM执行，因此函数耗时只是一个参考值，比较哪个函数更耗时是可以的。
