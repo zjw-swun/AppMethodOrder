@@ -110,8 +110,10 @@ appMethodOrder小工具改良自 [https://github.com/Harlber/Method_Trace_Tool](
 appMethodOrder小工具会在该jar所在目录生成``appMethodOrderTrace.txt``，以文本方式记录查询结果。
 我们可以借助数据库这个工具使用查询语句来帮助我们过滤出有用的信息，可以使用以下数据库命令，把``appMethodOrderTrace.txt``内容导入到数据库表中
 //从text 导入数据到 mysql （以下语句在mysql中实验是OK的）
-``truncate table app;``
-``LOAD DATA LOCAL INFILE 'C:/Users/hasee/Desktop/appMethodOrderTrace.txt' INTO TABLE `app`;``
+```
+truncate table app;
+LOAD DATA LOCAL INFILE 'C:/Users/hasee/Desktop/appMethodOrderTrace.txt' INTO TABLE `app`;
+```
 ![图片描述](https://github.com/zjw-swun/AppMethodOrder/blob/master/images/5.png)
 
 app表结创建语句如下
