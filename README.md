@@ -8,7 +8,7 @@
 
 # 1. 效果奉上
 
-![3.gif](http://upload-images.jianshu.io/upload_https://github.com/zjw-swun/AppMethodOrder/blob/master/images/1857887-eb619b1815d64ba3.gif?imageMogr2/auto-orient/strip)
+![图片描述](https://github.com/zjw-swun/AppMethodOrder/blob/master/images/1.gif)
 
 动作简介：首先点击MainActivity的自定义MyTextView然后进入SecondActivity再点击textview之后finish跳转回MainActivity<br>
 下面是库处理过所得到的函数调用顺序``order.txt``文件（我这里屏蔽了jdk函数，第三方库函数，以及android sdk中函数，换句话说我就保留了我自己包名中的函数顺序）
@@ -75,10 +75,10 @@
 先介绍掐表生成trace文件
 **android studio 3.0以下版本操作如下**
 第一次点击下图时钟icon代表开始掐表，然后回到您的app，进行您要跟踪函数调用顺序的操作，再次点击下图时钟icon代表结束掐表
-![QQ图片20170326003311.png](http://upload-images.jianshu.io/upload_https://github.com/zjw-swun/AppMethodOrder/blob/master/images/1857887-f4fa08b1a34858b3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![图片描述](https://github.com/zjw-swun/AppMethodOrder/blob/master/images/0.png)
 掐表结束后即会在captures目录生成``com.zjw.appmethodorder_2017.03.25_21.41.trace``文件，android studio会默认打开一个可视化窗口
 
-![QQ图片20170326003945.png](http://upload-images.jianshu.io/upload_https://github.com/zjw-swun/AppMethodOrder/blob/master/images/1857887-92566765ccfa0d1a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![图片描述](https://github.com/zjw-swun/AppMethodOrder/blob/master/images/00.png)
 
 **android studio 3.0版本操作如下**
 点击CPU 进入CPU面板，然后选择Instrumented选项（Sampled和Instrumented区别在于，Sampled函数调用采样率低生成的trace文件小，采样率低会造成大部分函数调用顺序漏记，Instrumented相当于无损采样生成文件大），第一次点击下图红色圆形icon代表开始掐表，然后回到您的app，进行您要跟踪函数调用顺序的操作，再次点击下图红色圆形icon代表结束掐表，
