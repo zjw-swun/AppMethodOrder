@@ -66,14 +66,14 @@
 # 3. 使用方法（**建议使用小工具，废弃原有的两个gradle Task**）
 
 **注意：请先确保 anroid sdk 中的dmtracedump 工具加入在你的环境变量中**
-
+**注意：请先确保 anroid sdk 中的dmtracedump 工具加入在你的环境变量中**
 熟悉appMethodOrder的朋友以前用的是两个gradle Task，由于android studio 3.0掐表操作生成的``.trace``文件改变了生成位置，android studio 3.0以下版本，默认产生在项目目录\capture\时间.trace，而到了android studio 3.0，windows用户trace文件生成目录以本人为例为：``C:\Users\hasee\AppData\Local\Temp\cpu_trace.trace``,所以以前用的是两个gradle Task，已经不再适应，考虑到扩展性，**建议使用小工具**
 
  
 ## 3.1 生成trace文件的方式
 生成trace文件的方式有2种一种是``掐表``操作，一种是在项目中使用代码操作<br>
 先介绍掐表生成trace文件<br>
-**android studio 3.0以下版本操作如下**<br>
+**android studio 3.0之前版本操作如下**<br>
 第一次点击下图时钟icon代表开始掐表，然后回到您的app，进行您要跟踪函数调用顺序的操作，再次点击下图时钟icon代表结束掐表
 ![图片描述](https://github.com/zjw-swun/AppMethodOrder/blob/master/images/0.png)
 掐表结束后即会在captures目录生成``com.zjw.appmethodorder_2017.03.25_21.41.trace``文件，android studio会默认打开一个可视化窗口
@@ -89,12 +89,17 @@
 第二种生成trace文件的方式就是在您的项目代码中使用
 ``android.os.Debug.startMethodTracing();`` 和``android.os.Debug.stopMethodTracing();``，执行完``stopMethodTracing``将会在您手机app的sdcard下面生成``.trace``文件
 
+**android studio 3.1版本开始,掐表默认实现改成cpu profiler**<br><br>
+详见[https://developer.android.google.cn/studio/profile/cpu-profiler](https://developer.android.google.cn/studio/profile/cpu-profiler),如果掐表生成的trace文件可以用文本编辑器打开看是否开头带有"slow"字样，dmtracedump无法解析，同理appMethodOrder小工具无法解析，android studio 3.1以上可以使用ddms中工具生成trace文件，或者使用代码``android.os.Debug.startMethodTracing();`` 和``android.os.Debug.stopMethodTracing();``生成trace文件
+
 ## 3.2 appMethodOrder小工具使用
 
-appMethodOrder小工具  下载地址[AppMethodOrderUtils.jar](tool/AppMethodOrderUtils.jar)
+appMethodOrder小工具  下载地址[AppMethodOrderUtils.jar](tool/AppMethodOrderUtils.jar)  
 appMethodOrder小工具  源码地址[AppMethodOrderUtils.zip](tool/AppMethodOrderUtils.zip)
 appMethodOrder小工具改良自 [https://github.com/Harlber/Method_Trace_Tool](https://github.com/Harlber/Method_Trace_Tool )
 感谢Harlber[https://github.com/Harlber](https://github.com/Harlber)
+
+**使用mac的朋友在环境配置成功且未在studio 3.1及其以后版本使用掐表生成trace时，仍然无法生成信息，建议在idea中导入AppMethodOrderUtils.zip中源码，执行trace类的main方法**
 
 将trace文件拖拽到小工具``File Path``左边区域
 ![图片描述](https://github.com/zjw-swun/AppMethodOrder/blob/master/images/3.png)
