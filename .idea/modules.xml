@@ -3,10 +3,10 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/AppMethodOrder.iml" filepath="$PROJECT_DIR$/AppMethodOrder.iml" />
-      <module fileurl="file://C:\Users\hasee\Desktop\AppMethodOrder\AppMethodOrder.iml" filepath="C:\Users\hasee\Desktop\AppMethodOrder\AppMethodOrder.iml" />
+      <module fileurl="file://$USER_HOME$/Desktop/AppMethodOrder/AppMethodOrder.iml" filepath="$USER_HOME$/Desktop/AppMethodOrder/AppMethodOrder.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://C:\Users\hasee\Desktop\AppMethodOrder\app\app.iml" filepath="C:\Users\hasee\Desktop\AppMethodOrder\app\app.iml" />
-      <module fileurl="file://C:\Users\hasee\Desktop\AppMethodOrder\githubmethod.iml" filepath="C:\Users\hasee\Desktop\AppMethodOrder\githubmethod.iml" />
+      <module fileurl="file://$USER_HOME$/Desktop/AppMethodOrder/app/app.iml" filepath="$USER_HOME$/Desktop/AppMethodOrder/app/app.iml" />
+      <module fileurl="file://$USER_HOME$/Desktop/AppMethodOrder/githubmethod.iml" filepath="$USER_HOME$/Desktop/AppMethodOrder/githubmethod.iml" />
     </modules>
   </component>
 </project>

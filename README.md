@@ -3,7 +3,7 @@
 项目地址：[https://github.com/zjw-swun/AppMethodOrder](https://github.com/zjw-swun/AppMethodOrder) 欢迎star
 
 
-作者列表（排名按代码贡献时间顺序）：二精-霁雪清虹，xingstarx，大精-wing，pighead4u ，Tesla ,lijunjie，三精-虹猫，Harlber
+作者列表（排名按代码贡献时间顺序）：二精-霁雪清虹，xingstarx，大精-wing，pighead4u ,lijunjie，三精-虹猫，Harlber
 
 
 # 1. 效果奉上
@@ -61,18 +61,13 @@
 ```
 
 # 2. 原理篇
-原理就是基于android sdk中提供的工具----traceview，和dmtracedump。traceview会生成.trace文件，该文件记录了函数调用顺序，函数耗时，函数调用次数等等有用的信息。而dmtracedump 工具就是基于trace文件解析生成报告的工具,好在花了一些时间发现dmtracedump -o 选项，经过研究发现，这玩意输出的内容居然是按逻辑顺序从上到下的。
+废弃dmtracedump解析，采用android studio官方源码解析方案(官方android studio解析trace的移植版版本)，核心代码详见``com.android.tools.perflib.vmtrace.VmTraceParser``类,相比之前的方案无需再配置dmtracedump环境变量，以及兼容android studio 3.1及其以后掐表生成的trace格式。
 
-# 3. 使用方法（**建议使用小工具，废弃原有的两个gradle Task**）
+# 3. 使用方法
 
-**注意：请先确保 anroid sdk 中的dmtracedump 工具加入在你的环境变量中**
-**注意：请先确保 anroid sdk 中的dmtracedump 工具加入在你的环境变量中**
-熟悉appMethodOrder的朋友以前用的是两个gradle Task，由于android studio 3.0掐表操作生成的``.trace``文件改变了生成位置，android studio 3.0以下版本，默认产生在项目目录\capture\时间.trace，而到了android studio 3.0，windows用户trace文件生成目录以本人为例为：``C:\Users\hasee\AppData\Local\Temp\cpu_trace.trace``,所以以前用的是两个gradle Task，已经不再适应，考虑到扩展性，**建议使用小工具**
-
- 
 ## 3.1 生成trace文件的方式
-生成trace文件的方式有2种一种是``掐表``操作，一种是在项目中使用代码操作<br>
-先介绍掐表生成trace文件<br>
+生成trace文件的方式有2种操作，一种是在项目中使用代码操作 即``android.os.Debug.startMethodTracing();`` 和``android.os.Debug.stopMethodTracing();``，执行完``stopMethodTracing``将会在您手机app的sdcard下面生成``.trace``文件，该方式不区分版本，dumtracedump可解析<br>
+第二种方式是掐表生成trace文件<br>
 **android studio 3.0之前版本操作如下**<br>
 第一次点击下图时钟icon代表开始掐表，然后回到您的app，进行您要跟踪函数调用顺序的操作，再次点击下图时钟icon代表结束掐表
 ![图片描述](https://github.com/zjw-swun/AppMethodOrder/blob/master/images/0.png)
@@ -86,11 +81,9 @@
 ![图片描述](https://github.com/zjw-swun/AppMethodOrder/blob/master/images/2.png)
 结束掐表就会在``C:\Users\hasee\AppData\Local\Temp\cpu_trace.trace``(本人是windows环境，使用windows系统可以参照，使用Mac的同学 cd /private/var/folders在folders 搜索cpu_trace.trace)，存在cpu_trace.trace时会新建cpu_trace1.tracecpu_trace2.trace 以此类推
 
-第二种生成trace文件的方式就是在您的项目代码中使用
-``android.os.Debug.startMethodTracing();`` 和``android.os.Debug.stopMethodTracing();``，执行完``stopMethodTracing``将会在您手机app的sdcard下面生成``.trace``文件
+**android studio 3.1开始,掐表默认实现改成cpu profiler**<br><br>
+详见[https://developer.android.google.cn/studio/profile/cpu-profiler](https://developer.android.google.cn/studio/profile/cpu-profiler),如果掐表生成的trace文件可以用文本编辑器打开看是否开头带有"slow"字样，dmtracedump无法解析，但是现在的小工具是基于最新android studio源码实现，支持此种trace格式啦啦啦！。android studio 3.4掐表生成trace文件在cpu面板右键支持自定义路径的export导出。
 
-**android studio 3.1版本开始,掐表默认实现改成cpu profiler**<br><br>
-详见[https://developer.android.google.cn/studio/profile/cpu-profiler](https://developer.android.google.cn/studio/profile/cpu-profiler),如果掐表生成的trace文件可以用文本编辑器打开看是否开头带有"slow"字样，dmtracedump无法解析，同理appMethodOrder小工具无法解析，android studio 3.1以上可以使用ddms中工具生成trace文件，或者使用代码``android.os.Debug.startMethodTracing();`` 和``android.os.Debug.stopMethodTracing();``生成trace文件
 
 ## 3.2 appMethodOrder小工具使用
 
@@ -99,7 +92,7 @@ appMethodOrder小工具  源码地址[AppMethodOrderUtils.zip](tool/AppMethodOrd
 appMethodOrder小工具改良自 [https://github.com/Harlber/Method_Trace_Tool](https://github.com/Harlber/Method_Trace_Tool )
 感谢Harlber[https://github.com/Harlber](https://github.com/Harlber)
 
-**使用mac的朋友在环境配置成功且未在studio 3.1及其以后版本使用掐表生成trace时，仍然无法生成信息，建议在idea中导入AppMethodOrderUtils.zip中源码，执行trace类的main方法**
+**好消息，现在小工具使用无需配置dmtracedump环境变量了！开箱即用！！！**
 
 将trace文件拖拽到小工具``File Path``左边区域
 ![图片描述](https://github.com/zjw-swun/AppMethodOrder/blob/master/images/3.png)
@@ -107,7 +100,10 @@ appMethodOrder小工具改良自 [https://github.com/Harlber/Method_Trace_Tool](
 
 ![图片描述](https://github.com/zjw-swun/AppMethodOrder/blob/master/images/4.png)
 
-如上图所示，查询结构存在四个tab，第一个``threadID``代表线程id，第二个``threadName``代表线程名，第三个``usecs``代表函数耗时(单位微秒，有时候耗时为-1不要惊讶，是因为该次掐表刚好没包括到其函数结束时机)，第四个``method``代表函数名+类名，（查询结果是以时间排序的）
+如上图所示，查询结构存在四个tab，第一个``threadID``代表线程id，第二个``threadName``代表线程名，第三个``usecs``代表函数耗时(单位微秒，有时候耗时为-1不要惊讶，是因为该次掐表刚好没包括到其函数结束时机)，第四个``method``代表函数名，（查询结果是以时间排序的）
+
+**特别注意**
+这里注意android studio 3.1以后掐表生成的trace 解析的时候 时间耗时有点小问题(官方代码的问题)，在一段时间内函数ent 给出的threadTime都是一致的，这里需要小小的注意一下，所以3.1以后掐表要看耗时的朋友，建议还是在studio面板看相对耗时，或者使用代码方式生成trace文件。
 
 # 4. 海量信息的处理手段
 不难发现trace文件时间越长意味着记录的信息也会越来越多，这时候单纯以包名过滤其实满足不了需求，比如我们想通过3个条件（例如 主线程+含zjw包名的 or android.view）来过滤出结果，以下将给出解决办法。
@@ -128,7 +124,6 @@ CREATE TABLE `app` (
   `threadName` varchar(255) DEFAULT NULL,
   `usecs` varchar(255) DEFAULT NULL,
   `method` varchar(255) DEFAULT NULL,
-  `className` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 ```
 查询语句示范
