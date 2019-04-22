@@ -100,7 +100,7 @@ appMethodOrder小工具改良自 [https://github.com/Harlber/Method_Trace_Tool](
 
 ![图片描述](https://github.com/zjw-swun/AppMethodOrder/blob/master/images/4.png)
 
-如上图所示，查询结构存在四个tab，第一个``threadID``代表线程id，第二个``threadName``代表线程名，第三个``usecs``代表函数耗时(单位微秒，有时候耗时为-1不要惊讶，是因为该次掐表刚好没包括到其函数结束时机)，第四个``method``代表函数名，（查询结果是以时间排序的）
+如上图所示，查询结构存在四个tab，第一个``threadID``代表线程id，第二个``threadName``代表线程名，第三个``usecs``代表函数耗时(单位微秒，有时候耗时为0不要惊讶，是因为该次掐表刚好没包括到其函数结束时机)，第四个``method``代表函数名，（查询结果是以时间排序的）
 
 **特别注意**
 这里注意android studio 3.1以后掐表生成的trace 解析的时候 时间耗时有点小问题(官方代码的问题)，在一段时间内函数ent 给出的threadTime都是一致的，这里需要小小的注意一下，所以3.1以后掐表要看耗时的朋友，建议还是在studio面板看相对耗时，或者使用代码方式生成trace文件。
